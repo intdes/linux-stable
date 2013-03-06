@@ -109,6 +109,15 @@
 			reg = <0x200 0x100>;
 		};
 
+		gpio1: gpio-controller@c00 {
+		    #gpio-cells = <2>;
+		    compatible = "fsl,mpc8349-gpio";
+		    reg = <0xc00 0x100>;
+		    interrupts = <74 0x8>;
+		    interrupt-parent = <&ipic>;
+		    gpio-controller;
+		};
+
 		i2c@3000 {
 			#address-cells = <1>;
 			#size-cells = <0>;
@@ -118,27 +127,73 @@
 			interrupts = <14 0x8>;
 			interrupt-parent = <&ipic>;
 			dfsrr;
+
+			adxl345@1d {
+			    compatible = "adxl34x";
+			    reg = <0x1d>;
+			    interrupt-parent = <&ipic>;
+		    	    interrupts = <48 0x4>;
+			};
+			/*pca9534a@3f {
+			 *    compatible = "pca9534";
+			 *    reg = <0x3f>;
+			 *};
+			 */
+			lm77@49 {
+			    compatible = "lm77";
+			    reg = <0x49>;
+			};
+			ads1015@4b {
+			    compatible = "ads1015";
+			    reg = <0x4b>;
+			};
+			24lc256@50 {
+			    compatible = "24c256";
+			    reg = <0x50>;
+			};
+			/*adxl345_ind@53 {
+			 *   compatible = "adxl34x";
+			 *   reg = <0x53>;
+			 *};
+			 */
+			pca9534a_ind@60 {
+			    compatible = "pca9534";
+			    reg = <0x60>;
+			};
+			ltc4151_mass@66 {
+			    compatible = "ltc4151";
+			    reg = <0x66>;
+			};
 			rtc@68 {
 				compatible = "dallas,ds1339";
 				reg = <0x68>;
 			};
-
-			mcu_pio: mcu@a {
-				#gpio-cells = <2>;
-				compatible = "fsl,mc9s08qg8-mpc8315erdb",
-					     "fsl,mcu-mpc8349emitx";
-				reg = <0x0a>;
-				gpio-controller;
+			ltc4151@6f {
+			    compatible = "ltc4151";
+			    reg = <0x6f>;
 			};
 		};
 
 		spi@7000 {
+                        #address-cells = <1>;
+                        #size-cells = <0>;
 			cell-index = <0>;
 			compatible = "fsl,spi";
 			reg = <0x7000 0x1000>;
 			interrupts = <16 0x8>;
 			interrupt-parent = <&ipic>;
 			mode = "cpu";
+			gpios = <&gpio1 3 0>;
+		};
+
+		xcp2515@8000 {
+		    compatible = "xcp2515";
+		    int_line {
+			gpios = <&gpio1 2 0>;
+		    };
+		    standby_line {
+			gpios = <&gpio1 1 0>;
+		    };
 		};
 
 		dma@82a8 {
@@ -369,6 +424,10 @@
 	pci0: pci@e0008500 {
 		interrupt-map-mask = <0xf800 0x0 0x0 0x7>;
 		interrupt-map = <
+			    	/* IDSEL 0x19 -mini PCI */
+				0xC800 0x0 0x0 0x1 &ipic 19 0x8
+		     		0xC800 0x0 0x0 0x2 &ipic 19 0x8
+
 				/* IDSEL 0x0E -mini PCI */
 				 0x7000 0x0 0x0 0x1 &ipic 18 0x8
 				 0x7000 0x0 0x0 0x2 &ipic 18 0x8
@@ -461,20 +520,6 @@
 				  0x01000000 0 0x00000000
 				  0x01000000 0 0x00000000
 				  0 0x00800000>;
-		};
-	};
-
-	leds {
-		compatible = "gpio-leds";
-
-		pwr {
-			gpios = <&mcu_pio 0 0>;
-			default-state = "on";
-		};
-
-		hdd {
-			gpios = <&mcu_pio 1 0>;
-			linux,default-trigger = "ide-disk";
 		};
 	};
 };
